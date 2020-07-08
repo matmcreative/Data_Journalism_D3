@@ -1,12 +1,11 @@
 # D3 Homework - Data Journalism and D3
+<img src="https://media.giphy.com/media/v2xIous7mnEYg/giphy.gif" width=350px align=right>
 
 ## Table of Contents
 * [Objective](#Objective)
 * [Technologies](#Technologies)
 * [Process](#Process)
 * [Visualization](#Visualization)
-
-<img src="https://media.giphy.com/media/v2xIous7mnEYg/giphy.gif" width=350px align=right>
 
 # Objective
 
