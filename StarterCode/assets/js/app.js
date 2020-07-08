@@ -1,223 +1,139 @@
-var svgWidth = 960;
-var svgHeight = 500;
-
-var margin = { top: 20, right: 40, bottom: 80, left: 100 };
-
-var width = svgWidth - margin.left - margin.right;
-var height = svgHeight - margin.top - margin.bottom;
-
-// Create an SVG wrapper, append an SVG group that will hold our chart, and shift the latter by left and top margins.
-var svg = d3
-  .select(".chart")
-  .append("svg")
-  .attr("width", svgWidth)
-  .attr("height", svgHeight)
-
-// Append an SVG group
-var chartGroup = svg.append("g")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
-;
-// Initial Params
-var chosenXAxis = "obese";
-
-// Append a div to the body to create tooltips, assign it a class
-function xScale(obesityData, chosendXAxis) {
-  // Create scale functions
-  var xLinearScale = d3.scaleLinear()
-  .domain([d3.min(obesityData, d => d[chosenXAxis]) *0.8,
-    d3.max(obesityData, d => d[chosenXAxis]) *1.2,
-  ])
-  .range([0, width]);
-
-return xLinearScale;
-}
-
-// function used for updating xAxis var upon click on axis label
-function renderAxes(newXScale, xAxis) {
-  var bottomAxis = d3.axisBottom(newXScale);
-
-  xAxis.transition()
-    .duration(1000)
-    .call(bottomAxis);
-
-  return xAxis;
-}
-
-// function used for updating circles group with a transition to
-// new circles
-function renderCircles(circlesGroup, newXScale, chosenXAxis) {
-
-  circlesGroup.transition()
-    .duration(1000)
-    .attr("cx", d => newXScale(d[chosenXAxis]));
-
-  return circlesGroup;
-}
-
-// function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, circlesGroup) {
-
-  var label;
-
-  if (chosenXAxis === "obese") {
-    label = "Obesity:";
-  }
-  else {
-    label = "Bachelor Or Higher";
+function responsiveChart() {
+  var svgArea = d3.select("body").select("svg");
+  if (!svgArea.empty()) {
+    svgArea.remove();
   }
 
-  var toolTip = d3.tip()
-    .attr("class", "tooltip")
-    .offset([80, -60])
-    .html(function(d) {
-      return (`${d.state}<br>${label} ${d[chosenXAxis]}`);
-    });
+  // Define SVG area dimensions
+  var svgWidth = window.innerWidth * 0.75;
+  var svgHeight = window.innerHeight * 0.75;
 
-  circlesGroup.call(toolTip);
 
-  circlesGroup.on("mouseover", function(data) {
-    toolTip.show(data);
-  })
-    // onmouseout event
-    .on("mouseout", function(data, index) {
-      toolTip.hide(data);
-    });
+  // Define the chart's margins as an object
+  var chartMargin = {
+    top: 50,
+    right: 50,
+    bottom: 50,
+    left: 50
+  };
 
-  return circlesGroup;
-}
+  // Define dimensions of the chart area
+  var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
+  var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
 
-// Retrieve data from the CSV file and execute everything below
-d3.csv("assets/data/data.csv")
-  .then(function(obesityData, err) {
-  if (err) throw err;
+  // Select body, append SVG area to it, and set the dimensions
+  var svg = d3
+    .select("body")
+    .append("svg")
+    .attr("height", svgHeight)
+    .attr("width", svgWidth);
 
-  // parse data
-  obesityData.forEach(function(data) {
-    data.abbr = +data.hair_length;
-    data.poverty = +data.num_hits;
-    data.povertyMoe = +data.num_albums;
-    data.age= +data.age;
-    data.ageMoe= +data.ageMoe;
-    data.income= +data.income;
-    data.incomeMoe= +data.incomeMoe;
-    data.healthcare= +data.healthcare;
-    data.healthcareLow= +data.healthcareLow;
-    data.healthcareHigh= +data.healthcareHigh;
-    data.obesity= +data.obesity;
-    data.obesityLow= +data.obesityLow;
-    data.obesityHigh= +data.obesityHigh;
-    data.smokes= +data.smokes;
-    data.smokesLow= +data.smokesLow;
-    data.smokesHigh= +data.smokesHigh
+  // Append a group to the SVG area and shift ('translate') it to the right and down to adhere
+  // to the margins set in the "chartMargin" object.
+  var chartGroup = svg.append("g")
+    .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
+
+  // Load the data from the csv file
+  d3.csv("assets/data/data.csv").then(function(csvData) {
+      // console.log(csvData);
+
+      // Parse the income and obesity values from string to integer
+      csvData.forEach(function(state) {
+          state.obesity = parseInt(state.obesity);
+          state.income = parseInt(state.income);
+      });
+      // Create axis scale functions
+      var xLinearScale = d3.scaleLinear()
+        .domain([(d3.min(csvData, d => d.income)) * 0.95, d3.max(csvData, d => d.income) * 1.05])
+        .range([0, chartWidth]);
+
+      var yLinearScale = d3.scaleLinear()
+        .domain([d3.min(csvData, d => d.obesity) * 0.9, d3.max(csvData, d => d.obesity) * 1.1])
+        .range([chartHeight, 0]);
+      
+      // Create axis functions
+      var xAxis = d3.axisBottom(xLinearScale);
+      var yAxis = d3.axisLeft(yLinearScale);
+
+      // Append axes to chart
+      chartGroup.append("g")
+        .attr("transform", `translate(0, ${chartHeight})`)
+        .call(xAxis);
+      chartGroup.append("g")
+        .call(yAxis);
+
+      // Create svg text of the abbreviation for each state
+      var circleText = chartGroup.selectAll("stateText")
+        .data(csvData)
+        .enter()  
+        .append("text")
+        .classed("stateText", true)
+        .attr("dx", d => xLinearScale(d.income))
+        .attr("dy", d => yLinearScale(d.obesity) + 5)
+        .text(d => d.abbr);
+      
+      // Create a circle for each state
+      var circleGroup = chartGroup.selectAll("circle")
+        .data(csvData)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xLinearScale(d.income))
+        .attr("cy", d => yLinearScale(d.obesity))
+        .attr("r", 15)
+        .attr("fill", "green")
+        .attr("opacity", ".6")
+
+      // Define the tooltip
+      var toolTip = d3.tip()
+        .attr("class", "tooltip")
+        .offset([-50, 0])
+        .html(function(d) {
+          return (`<strong>${d.state}</strong> <hr> Median Income: $${d.income} <hr> Obesity: ${d.obesity}%`);
+        });
+
+      // Create the tooltip for the chartGroup
+      chartGroup.call(toolTip);
+
+      // Event listener for "mouseover": displays tooltip and changes circle color to red
+      circleGroup.on("mouseover", function(d) {
+        toolTip.show(d, this);
+        d3.select(this)
+          .transition()
+          .duration(100)
+          .attr("r", 30)
+          .attr("fill", "grey")
+      })
+      // Event listener for  "mouseout": hides tooltip and changes circle color back to green
+        .on("mouseout", function(d) {
+          toolTip.hide(d);
+          d3.select(this)
+          .transition()
+          .duration(500)
+          .attr("r", 15)
+          .attr("fill", "green")
+      });
+      // Create axes labels
+      chartGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - chartMargin.left * 0.9)
+        .attr("x", 0 - (chartHeight / 2))
+        .attr("dy", "1em")
+        .attr("class", "axisText")
+        .text("Obesity (%)");
+
+      chartGroup.append("text")
+        .attr("transform", `translate(${chartWidth / 2}, ${chartHeight + chartMargin.top * 0.9})`)
+        .attr("class", "axisText")
+        .text("Median Income (USD)");
+
+
+  }).catch(function(error) {
+    console.log(error);
   });
+}
+  
+// Call responsiveChart() when the page loads
+responsiveChart();
 
-  // xLinearScale function above csv import
-  var xLinearScale = xScale(obesityData, chosenXAxis);
-
-  // Create y scale function
-  var yLinearScale = d3.scaleLinear()
-    .domain([0, d3.max(obesityData, d => d.poverty)])
-    .range([height, 0]);
-
-  // Create initial axis functions
-  var bottomAxis = d3.axisBottom(xLinearScale);
-  var leftAxis = d3.axisLeft(yLinearScale);
-
-  // append x axis
-  var xAxis = chartGroup.append("g")
-    .classed("x-axis", true)
-    .attr("transform", `translate(0, ${height})`)
-    .call(bottomAxis);
-
-  // append y axis
-  chartGroup.append("g")
-    .call(leftAxis);
-
-  // append initial circles
-  var circlesGroup = chartGroup.selectAll("circle")
-    .data(obesityData)
-    .enter()
-    .append("circle")
-    .attr("cx", d => xLinearScale(d[chosenXAxis]))
-    .attr("cy", d => yLinearScale(d.poverty))
-    .attr("r", 20)
-    .attr("fill", "pink")
-    .attr("opacity", ".5");
-
-  // Create group for two x-axis labels
-  var labelsGroup = chartGroup.append("g")
-    .attr("transform", `translate(${width / 2}, ${height + 20})`);
-
-  var obesityLabel = labelsGroup.append("text")
-    .attr("x", 0)
-    .attr("y", 20)
-    .attr("value", "obese") // value to grab for event listener
-    .classed("active", true)
-    .text("Obesity");
-
-  var povertyLabel = labelsGroup.append("text")
-    .attr("x", 0)
-    .attr("y", 40)
-    .attr("value", "poverty") // value to grab for event listener
-    .classed("inactive", true)
-    .text("Poverty");
-
-  // append y axis
-  chartGroup.append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 0 - margin.left)
-    .attr("x", 0 - (height / 2))
-    .attr("dy", "1em")
-    .classed("axis-text", true)
-    .text("Poverty");
-
-  // updateToolTip function above csv import
-  var circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
-
-  // x axis labels event listener
-  labelsGroup.selectAll("text")
-    .on("click", function() {
-      // get value of selection
-      var value = d3.select(this).attr("value");
-      if (value !== chosenXAxis) {
-
-        // replaces chosenXAxis with value
-        chosenXAxis = value;
-
-        // console.log(chosenXAxis)
-
-        // functions here found above csv import
-        // updates x scale for new data
-        xLinearScale = xScale(obesityData, chosenXAxis);
-
-        // updates x axis with transition
-        xAxis = renderAxes(xLinearScale, xAxis);
-
-        // updates circles with new x values
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
-
-        // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
-
-        // changes classes to change bold text
-        if (chosenXAxis === "poverty") {
-          povertyLabel
-            .classed("active", true)
-            .classed("inactive", false);
-          obesityLabel
-            .classed("active", false)
-            .classed("inactive", true);
-        }
-        else {
-          povertyLabel
-            .classed("active", false)
-            .classed("inactive", true);
-            obesityLabel
-            .classed("active", true)
-            .classed("inactive", false);
-        }
-      }
-    });
-}).catch(function(error) {
-  console.log(error);
-})
+// When the browser window is resized, responsiveChart() is called.
+d3.select(window).on("resize", responsiveChart);
