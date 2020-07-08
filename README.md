@@ -20,7 +20,7 @@ The data set iis from the U.S. Census Bureau and the Behavioral Risk Factor Surv
 * Javascript
 * .json
 
-# Process | 
+# Process 
 ## D3 Dabbler
 
 ![4-scatter](Images/4-scatter.jpg)
