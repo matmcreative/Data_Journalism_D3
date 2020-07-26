@@ -1,12 +1,11 @@
 # D3 Homework - Data Journalism and D3
+<img src="https://media.giphy.com/media/v2xIous7mnEYg/giphy.gif" width=350px align=right>
 
 ## Table of Contents
 * [Objective](#Objective)
 * [Technologies](#Technologies)
 * [Process](#Process)
 * [Visualization](#Visualization)
-
-<img src="https://media.giphy.com/media/v2xIous7mnEYg/giphy.gif" width=350px align=right>
 
 # Objective
 
@@ -21,7 +20,8 @@ The data set iis from the U.S. Census Bureau and the Behavioral Risk Factor Surv
 * Javascript
 * .json
 
-# Process | D3 Dabbler
+# Process 
+## D3 Dabbler
 
 ![4-scatter](Images/4-scatter.jpg)
 
@@ -36,4 +36,4 @@ Using D3, create a scatter plot that represents each state with circle elements 
 * Create a static graphic when D3 lets you interact with your data?
 
 # Visualization
-<img src="Images/7-animated-scatter.gif" width=350px align=left>
+<img src="Images/obesity_vs_poverty.png" width=80% align=left>
