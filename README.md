@@ -1,4 +1,4 @@
-# D3 Homework - Data Journalism and D3
+# Data Journalism and D3
 <img src="https://media.giphy.com/media/v2xIous7mnEYg/giphy.gif" width=350px align=right>
 
 ## Table of Contents
